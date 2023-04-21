@@ -1,0 +1,45 @@
+[build-system]
+requires = [
+    "setuptools>=45",
+    "setuptools_scm[toml]>=6.2",
+    "wheel",
+    "setuptools-git-versioning<2"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cq-filter"
+authors = [
+    {name = "Matti Eiden", email = "snaipperi@gmail.com"},
+]
+description = "Cadquery object filtering framework"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["data", "mapping"]
+license = {text = "Apache License 2.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent"
+]
+dynamic = ["version"]
+
+[project.urls]
+"Bug Tracker" = "https://github.com/voneiden/cq-filter/issues/"
+"Documentation" = "https://github.com/voneiden/cq-filter/"
+"Source Code" = "https://github.com/voneiden/cq-filter/"
+
+[tool.setuptools-git-versioning]
+enabled = true
+dev_template = "{tag}.post{ccount}"
+
+
+[tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
+
+[tool.flake8]
+max-line-length = 100
+
+[tool.isort]
+profile = "black"
