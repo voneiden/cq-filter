@@ -21,10 +21,11 @@ Manipulating object selections in cadquery isn't currently possible without brea
 Following example filters all faces with an Area of more than 100
 
 ```python
-wp = (wp
-     .faces(">Z")
-     .filter(lambda face: face.Area() > 100)
-     )
+wp = (
+    wp
+    .faces(">Z")
+    .filter(lambda face: face.Area() > 100)
+)
 ```
 
 ⚠️ values in cq/occt are often not as exact as you'd expect. For example you might expect a certain 
@@ -37,10 +38,11 @@ sane precision, like `round(face.Area(), 4)`
 Following example orders all faces by area and selects the three biggest ones
 
 ```python
-wp = (wp
-     .faces(">Z")
-     .order(lambda face: face.Area())[-3:]
-     )
+wp = (
+    wp
+    .faces(">Z")
+    .order(lambda face: face.Area())[-3:]
+)
 ```
 
 ## Using group and clustering
@@ -49,9 +51,10 @@ wp = (wp
 Select the smallest faces that are within 10 units of each other
 
 ```python
-wp = (wp
-.faces(">Z")
-.group(Cluster(lambda face: face.Area(), tol=10)[0]
+wp = (
+    wp
+    .faces(">Z")
+    .group(Cluster(lambda face: face.Area(), tol=10)[0])
 )
 ```
 
