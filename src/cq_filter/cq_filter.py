@@ -10,13 +10,15 @@ T = TypeVar("T", bound="CQFilterMixin")
 class CQFilterMixin:
     """
     Mixin class for cq.Workplane that provides extra filtering,
-    ordering and grouping capabilities for workplane objects
+    sorting and grouping capabilities for workplane objects
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._cq_filter_groups = None
+        self._snapshot_objs = None
+        self._snapshot_f = None
 
     def __getitem__(self, item):
         if self._cq_filter_groups is None:
@@ -46,7 +48,7 @@ class CQFilterMixin:
         objs = filter(f, self.objects)
         return self.newObject(objs)
 
-    def order(self: T, key: Callable[[CQObject], bool]) -> T:
+    def sort(self: T, key: Callable[[CQObject], bool]) -> T:
         objs = sorted(self.objects, key=key)
         return self.newObject(objs)
 
@@ -64,6 +66,14 @@ class CQFilterMixin:
         rv = self.newObject(objs)
         rv._cq_filter_groups = cq_filter_groups
         return rv
+
+    def snapshot_faces(self: T):
+        self._snapshot_f = 'faces'
+        self._snapshot_objs = self.faces().objects
+
+    def created_faces(self):
+        pass
+
 
 
 class Workplane(CQFilterMixin, cq.Workplane):

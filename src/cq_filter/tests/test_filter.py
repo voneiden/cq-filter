@@ -31,22 +31,22 @@ def test_filter(wp_with_rects):
     assert len(filtered_objs) == 2
 
 
-def test_order(wp_with_rects):
-    ordered_y = wp_with_rects.order(lambda o: o.Center().y)
+def test_sort(wp_with_rects):
+    sorted_y = wp_with_rects.sort(lambda o: o.Center().y)
 
-    ordered_y_objs = ordered_y[0].objects
-    assert len(ordered_y_objs) == 1
-    assert ordered_y_objs[0].Center().y == -10
-    ordered_y_objs = ordered_y[-1].objects
-    assert ordered_y_objs[0].Center().y == 20
+    sorted_y_objs = sorted_y[0].objects
+    assert len(sorted_y_objs) == 1
+    assert sorted_y_objs[0].Center().y == -10
+    sorted_y_objs = sorted_y[-1].objects
+    assert sorted_y_objs[0].Center().y == 20
 
-    ordered_x = ordered_y.order(lambda o: o.Center().x)
+    sorted_x = sorted_y.sort(lambda o: o.Center().x)
 
-    ordered_x_objs = ordered_x[0].objects
-    assert len(ordered_x_objs) == 1
-    assert round(ordered_x_objs[0].Center().x, 4) == 0
-    ordered_x_objs = ordered_x[-1].objects
-    assert round(ordered_x_objs[0].Center().x, 4) == 5
+    sorted_x_objs = sorted_x[0].objects
+    assert len(sorted_x_objs) == 1
+    assert round(sorted_x_objs[0].Center().x, 4) == 0
+    sorted_x_objs = sorted_x[-1].objects
+    assert round(sorted_x_objs[0].Center().x, 4) == 5
 
 
 def test_group(wp_with_rects):

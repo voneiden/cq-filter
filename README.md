@@ -5,7 +5,7 @@ cq-filter adds a few new workplane methods that take a function argument
 of type `f: Callable[[CQObject], bool]`:
 
 * `filter(f)`: filters Workplane objects
-* `order(f)`: orders Workplane objects
+* `sort(f)`: orders Workplane objects
 * `group(f)`: groups Workplane objects
 
 Additionally, it adds subscription support to the Workplane, allowing 
@@ -33,15 +33,15 @@ face to have an area of exactly 100 and be included when you filter the area aga
 closer inspection it turns out the area is actually just slightly below 100 (99.999999997). Consider rounding to some
 sane precision, like `round(face.Area(), 4)`
 
-## Using order and subscription
+## Using sort and subscription
 
-Following example orders all faces by area and selects the three biggest ones
+Following example sorts all faces by area and selects the three biggest ones
 
 ```python
 wp = (
     wp
     .faces(">Z")
-    .order(lambda face: face.Area())[-3:]
+    .sort(lambda face: face.Area())[-3:]
 )
 ```
 
