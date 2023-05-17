@@ -68,12 +68,11 @@ class CQFilterMixin:
         return rv
 
     def snapshot_faces(self: T):
-        self._snapshot_f = 'faces'
+        self._snapshot_f = "faces"
         self._snapshot_objs = self.faces().objects
 
     def created_faces(self):
         pass
-
 
 
 class Workplane(CQFilterMixin, cq.Workplane):
