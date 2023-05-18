@@ -111,6 +111,11 @@ class CQFilterMixin:
 
         return self.newObject(new_faces)
 
+    def toWires(self: T) -> T:
+        outers = [o.outerWire() for o in self.objects]
+        inners = [inner for o in self.objects for inner in o.innerWires()]
+        return self.newObject(outers + inners)
+
 
 def break_compound_to_faces(compound: cq.Compound) -> list[cq.Face]:
     faces = []

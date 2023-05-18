@@ -23,3 +23,17 @@ def test_last_circular_pockets(big_block_with_four_circular_pockets: Workplane):
 
     last_everything = big_block_with_four_circular_pockets.last(True).objects
     assert len(last_everything) == 8
+
+
+def test_last_can_continue_extruding(big_block_with_four_rectangular_pockets):
+    assert len(big_block_with_four_rectangular_pockets.faces().objects) == 26
+
+    wp = (
+        big_block_with_four_rectangular_pockets.last()
+        .toWires()
+        .toPending()
+        .extrude(5)
+        .faces()
+    )
+
+    assert len(wp.objects) == 6
