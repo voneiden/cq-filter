@@ -1,10 +1,11 @@
 import itertools
-from typing import Callable, Iterable, TypeVar
+from typing import Any, Callable, Iterable, TypeAlias, TypeVar, cast
 
 import cadquery as cq
-from cadquery.cq import CQObject
+from cadquery.cq import Compound, CQObject, Edge, Face, Solid, Wire
 
 T = TypeVar("T", bound="CQFilterMixin")
+WPObject: TypeAlias = CQObject | Edge | Wire | Face | Solid | Compound
 
 
 class CQFilterMixin:
@@ -44,15 +45,15 @@ class CQFilterMixin:
         rv._cq_filter_groups = None
         return rv
 
-    def filter(self: T, f: Callable[[CQObject], bool]) -> T:
+    def filter(self: T, f: Callable[[WPObject], bool]) -> T:
         objs = filter(f, self.objects)
         return self.newObject(objs)
 
-    def sort(self: T, key: Callable[[CQObject], bool]) -> T:
+    def sort(self: T, key: Callable[[WPObject], bool]) -> T:
         objs = sorted(self.objects, key=key)
         return self.newObject(objs)
 
-    def group(self: T, key: Callable[[CQObject], bool]) -> T:
+    def group(self: T, key: Callable[[WPObject], bool]) -> T:
         if isinstance(key, Cluster):
             sort_key = key.f
         else:
@@ -96,3 +97,27 @@ class Cluster:
             return self.cluster_value
         self.cluster_value = value
         return value
+
+
+# Convenience functions for IDEA / PyCharm that do
+# not support lambda type inference
+
+
+def f_(v: Any) -> cq.Face:
+    return cast(cq.Face, v)
+
+
+def e_(v: Any) -> cq.Edge:
+    return cast(cq.Edge, v)
+
+
+def w_(v: Any) -> cq.Wire:
+    return cast(cq.Wire, v)
+
+
+def s_(v: Any) -> cq.Solid:
+    return cast(cq.Solid, v)
+
+
+def c_(v: Any) -> cq.Compound:
+    return cast(cq.Compound, v)
