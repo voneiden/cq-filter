@@ -74,6 +74,18 @@ select faces that have a normal parallel to the current workplane. Presumably th
 want to use to select the face(s) created by a call to `extrude` or `cutBlind`. Supplying `everything = True` will 
 select all faces that are new.
 
+```python
+from cq_filter import Workplane
+
+wp = (
+    Workplane()
+    .rect(5, 5)
+    .extrude(2)
+    .last()
+    .workplane()
+)
+```
+
 * ⚠️ `last` will not select faces that were modified
 * ⚠️ `last` is probably not very handy for selecting the end face of something like `revolve`  
 
