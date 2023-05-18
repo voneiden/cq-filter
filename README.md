@@ -7,6 +7,7 @@ of type `f: Callable[[CQObject], bool]`:
 * `filter(f)`: filters Workplane objects
 * `sort(f)`: orders Workplane objects
 * `group(f)`: groups Workplane objects
+* `last`: selects newly created faces
 
 Additionally, it adds subscription support to the Workplane, allowing 
 selection of objects quickly.
@@ -66,11 +67,30 @@ next manipulation of workplane.
 
 * Cluster() defaults to a tolerance of `1e-4`
 
+## Using `last` to select newly created faces
+
+A call to `.last(everything=False)` attempts to select newly created faces. When `everything = False` it will only
+select faces that have a normal parallel to the current workplane. Presumably this default behaviour is what you'd
+want to use to select the face(s) created by a call to `extrude` or `cutBlind`. Supplying `everything = True` will 
+select all faces that are new.
+
+* ⚠️ `last` will not select faces that were modified
+* ⚠️ `last` is probably not very handy for selecting the end face of something like `revolve`  
+
+
 ## Usage 
 
-You'll probably want to create your own workplane class
+You may want to create your own workplane class if you have multiple mixins
 
 ```python 
+from cq_filter import CQFilterMixin
+
 class Workplane(CQFilterMixin, cq.Workplane):
    pass
+```
+
+If you don't have multiple mixins, then the above class can also be directly imported 
+
+```python 
+from cq_filter import Workplane
 ```

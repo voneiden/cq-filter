@@ -1,8 +1,10 @@
 import itertools
-from typing import Any, Callable, Iterable, TypeAlias, TypeVar, cast
+from typing import Any, Callable, Iterable, Optional, TypeAlias, TypeVar, cast
 
 import cadquery as cq
 from cadquery.cq import Compound, CQObject, Edge, Face, Solid, Wire
+from OCP.TopAbs import TopAbs_FACE
+from OCP.TopExp import TopExp_Explorer
 
 T = TypeVar("T", bound="CQFilterMixin")
 WPObject: TypeAlias = CQObject | Edge | Wire | Face | Solid | Compound
@@ -68,12 +70,56 @@ class CQFilterMixin:
         rv._cq_filter_groups = cq_filter_groups
         return rv
 
-    def snapshot_faces(self: T):
-        self._snapshot_f = "faces"
-        self._snapshot_objs = self.faces().objects
+    def last(self: T, everything=False) -> T:
+        # Find the last solid
+        parent = self.parent
+        solid: Optional[cq.Solid] = None
+        while parent is not None:
+            parent_objs = parent.objects
+            if len(parent_objs) == 1 and isinstance(parent_objs[0], cq.Solid):
+                solid = parent_objs[0]
+                break
+            parent = parent.parent
 
-    def created_faces(self):
-        pass
+        if solid is None:
+            old_faces = set()
+        else:
+            old_faces = set(solid.Faces())
+
+        current_faces = set(self.faces().objects)
+        # Perform diffs between the sets
+        missing_old_faces = [face for face in old_faces if face not in current_faces]
+        new_face_candidates = [face for face in current_faces if face not in old_faces]
+
+        if missing_old_faces and new_face_candidates:
+            missing_compound = Compound.makeCompound(missing_old_faces)
+            candidate_compound = Compound.makeCompound(new_face_candidates)
+            cut_compound = candidate_compound.cut(missing_compound)
+            new_faces = break_compound_to_faces(cut_compound)
+
+        # If no old faces were missing, then all candidates are new faces
+        elif new_face_candidates:
+            new_faces = new_face_candidates
+        else:
+            raise ValueError("No new faces found")
+        if not everything:
+            new_faces = [
+                face
+                for face in new_faces
+                if self.plane.zDir.getAngle(face.normalAt(None)) < 0.0001
+            ]
+
+        return self.newObject(new_faces)
+
+
+def break_compound_to_faces(compound: cq.Compound) -> list[cq.Face]:
+    faces = []
+    explorer = TopExp_Explorer(compound.wrapped, TopAbs_FACE)
+    while explorer.More():
+        face = explorer.Current()
+        faces.append(cq.Face(face))
+        explorer.Next()
+    return faces
 
 
 class Workplane(CQFilterMixin, cq.Workplane):
