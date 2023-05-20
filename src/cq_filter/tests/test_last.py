@@ -1,3 +1,5 @@
+from pytest import approx
+
 from cq_filter import Workplane
 
 
@@ -37,3 +39,28 @@ def test_last_can_continue_extruding(big_block_with_four_rectangular_pockets):
     )
 
     assert len(wp.objects) == 6
+
+
+def test_last_on_revolve(wp):
+    wp = (
+        wp.rect(2, 2)
+        .extrude(1)
+        .faces(">Z")
+        .workplane()
+        .circle(1)
+        .revolve(90, (-5, 0), (-5, -1))
+        .last()
+    )
+
+    objects = wp.objects
+    assert len(objects) == 1
+    normal = objects[0].normalAt()
+    assert normal.toTuple() == approx((-1, 0, 0))
+
+
+def test_on_no_solid(wp):
+    wp = wp.rect(2, 2).extrude(1).last()
+
+    objs = wp.objects
+    assert len(objs) == 1
+    assert objs[0].Center().toTuple() == approx((0, 0, 1))

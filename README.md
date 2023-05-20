@@ -70,9 +70,10 @@ next manipulation of workplane.
 ## Using `last` to select newly created faces
 
 A call to `.last(everything=False)` attempts to select newly created faces. When `everything = False` it will only
-select faces that have a normal parallel to the current workplane. Presumably this default behaviour is what you'd
-want to use to select the face(s) created by a call to `extrude` or `cutBlind`. Supplying `everything = True` will 
-select all faces that are new.
+select faces that share all their edges with other new faces. In other words: probably the face you'd want to focus on
+after some operation like extrude, cut or revolve will be selected. 
+
+Supplying `everything = True` will select all faces that are new.
 
 ```python
 from cq_filter import Workplane
@@ -86,8 +87,7 @@ wp = (
 )
 ```
 
-* ⚠️ `last` will not select faces that were modified
-* ⚠️ `last` is probably not very handy for selecting the end face of something like `revolve`  
+* ⚠️ `last` will not select faces that were modified 
 
 
 ## Usage 

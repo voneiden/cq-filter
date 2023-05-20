@@ -5,6 +5,7 @@ import cadquery as cq
 from cadquery.cq import Compound, CQObject, Edge, Face, Solid, Wire
 from OCP.TopAbs import TopAbs_FACE
 from OCP.TopExp import TopExp_Explorer
+from OCP.TopoDS import TopoDS_Edge
 
 T = TypeVar("T", bound="CQFilterMixin")
 WPObject: TypeAlias = CQObject | Edge | Wire | Face | Solid | Compound
@@ -73,16 +74,30 @@ class CQFilterMixin:
     def last(self: T, everything=False) -> T:
         # Find the last solid
         parent = self.parent
+        parent_with_pending = None
         solid: Optional[cq.Solid] = None
         while parent is not None:
             parent_objs = parent.objects
             if len(parent_objs) == 1 and isinstance(parent_objs[0], cq.Solid):
                 solid = parent_objs[0]
                 break
+            elif (
+                parent_with_pending is None
+                and len(parent_objs) > 0
+                and all(
+                    isinstance(obj, cq.Wire) or isinstance(obj, cq.Sketch)
+                    for obj in parent_objs
+                )
+            ):
+                parent_with_pending = parent
+
             parent = parent.parent
 
         if solid is None:
-            old_faces = set()
+            if parent_with_pending:
+                old_faces = parent_with_pending.toPending()._getFaces()
+            else:
+                old_faces = set()
         else:
             old_faces = set(solid.Faces())
 
@@ -102,12 +117,23 @@ class CQFilterMixin:
             new_faces = new_face_candidates
         else:
             raise ValueError("No new faces found")
+
         if not everything:
-            new_faces = [
-                face
-                for face in new_faces
-                if self.plane.zDir.getAngle(face.normalAt(None)) < 0.0001
-            ]
+            # Mother of all assumptions:
+            # If all the edges on a new face are partners with other
+            # new faces, then it's a face we want to focus on.
+
+            partner_faces = []
+            for i, face in enumerate(new_faces):
+                face_topo_edges = [edge.wrapped for edge in face.Edges()]
+                other_faces = new_faces[:i] + new_faces[i + 1 :]
+                other_topo_edges = [
+                    edge.wrapped for face in other_faces for edge in face.Edges()
+                ]
+                if _partner_topo_edges(face_topo_edges, other_topo_edges):
+                    partner_faces.append(face)
+
+            new_faces = partner_faces
 
         return self.newObject(new_faces)
 
@@ -125,6 +151,24 @@ def break_compound_to_faces(compound: cq.Compound) -> list[cq.Face]:
         faces.append(cq.Face(face))
         explorer.Next()
     return faces
+
+
+def _partner_topo_edges(
+    face_topo_edges: list[TopoDS_Edge], other_topo_edges: list[TopoDS_Edge]
+) -> bool:
+    for face_topo_edge in face_topo_edges:
+        if not _partner_topo_edge(face_topo_edge, other_topo_edges):
+            return False
+    return True
+
+
+def _partner_topo_edge(
+    face_topo_edge: TopoDS_Edge, other_topo_edges: list[TopoDS_Edge]
+) -> bool:
+    for other_topo_edge in other_topo_edges:
+        if face_topo_edge.IsPartner(other_topo_edge):
+            return True
+    return False
 
 
 class Workplane(CQFilterMixin, cq.Workplane):
