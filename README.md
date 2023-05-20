@@ -8,6 +8,7 @@ of type `f: Callable[[CQObject], bool]`:
 * `sort(f)`: orders Workplane objects
 * `group(f)`: groups Workplane objects
 * `last`: selects newly created faces
+* `toWires`: select wires from selected faces
 
 Additionally, it adds subscription support to the Workplane, allowing 
 selection of objects quickly.
