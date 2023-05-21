@@ -41,3 +41,15 @@ def big_block_with_four_circular_pockets(
     big_block_with_four_points: Workplane,
 ) -> Workplane:
     return big_block_with_four_points.circle(2).cutBlind(-5)
+
+
+@pytest.fixture
+def wp_with_rects():
+    wp = (
+        Workplane()
+        .pushPoints([(0, 10), (0, -10), (0, 20), (5, 15)])
+        .rect(2, 2)
+        .extrude(1)
+        .faces(">Z")
+    )
+    return wp

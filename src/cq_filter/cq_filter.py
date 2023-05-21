@@ -1,4 +1,5 @@
 import itertools
+import operator
 from typing import Any, Callable, Iterable, Optional, TypeAlias, TypeVar, cast
 
 import cadquery as cq
@@ -48,12 +49,34 @@ class CQFilterMixin:
         rv._cq_filter_groups = None
         return rv
 
-    def filter(self: T, f: Callable[[WPObject], bool]) -> T:
+    def filter(self: T, f: Callable[[WPObject], bool] = None, **kwargs) -> T:
+        if f is None and not kwargs:
+            raise ValueError
         objs = filter(f, self.objects)
         return self.newObject(objs)
 
-    def sort(self: T, key: Callable[[WPObject], bool]) -> T:
-        objs = sorted(self.objects, key=key)
+    def sort(
+        self: T, key: Optional[Callable[[WPObject], bool] | str] = None, **kwargs
+    ) -> T:
+        if key is None:
+            if not kwargs:
+                raise ValueError("Must provide a key")
+            if len(kwargs) > 1:
+                raise ValueError("Must provide a single key")
+
+            key, param = kwargs.popitem()
+            param = _parse_value(param)
+            key_f = _parse_key_to_value_f(key, param=param)
+        else:
+            if kwargs:
+                raise ValueError("Must provide a single key")
+
+            if isinstance(key, str):
+                key_f = _parse_key_to_value_f(key)
+            else:
+                key_f = key
+
+        objs = sorted(self.objects, key=key_f)
         return self.newObject(objs)
 
     def group(self: T, key: Callable[[WPObject], bool]) -> T:
@@ -169,6 +192,80 @@ def _shared_edge(
         if face_topo_edge.IsSame(other_topo_edge):
             return True
     return False
+
+
+def _parse_kwargs(**kwargs) -> list[Callable[[WPObject], bool]]:
+    # 5 is similar magnitude to cq.Vector __eq__
+    precision = kwargs.pop("precision", 5)
+    return [_parse_kwarg(key, value, precision) for key, value in kwargs.items()]
+
+
+_operator_map = {
+    "eq": operator.eq,
+    "lt": operator.lt,
+    "lte": operator.le,
+    "gt": operator.gt,
+    "gte": operator.ge,
+}
+
+
+def _parse_kwarg(key, value, precision: int) -> Callable[[WPObject], bool]:
+    value = _parse_value(value)
+
+    tok = key.split("__")
+    if tok[-1] in _operator_map:
+        op = tok[-1]
+        tok_nop = tok[:-1]
+    else:
+        op = operator.eq
+        tok_nop = tok
+
+    value_f = _parse_key_to_value_f(tok_nop, precision)
+    return lambda o: op(value_f(o), value)
+
+
+def _parse_value(value):
+    if isinstance(value, str) and len(value) > 0:
+        if value[0] == "-":
+            sign = -1
+            value = value[1:]
+        else:
+            sign = 1
+        match value:
+            case "x" | "X":
+                return cq.Vector(sign * 1, 0, 0)
+            case "y" | "Y":
+                return cq.Vector(0, sign * 1, 0)
+            case "z" | "Z":
+                return cq.Vector(0, 0, sign * 1)
+    return value
+
+
+def _parse_key_to_value_f(
+    key: str | list[str], precision=5, param=None
+) -> Callable[[WPObject], Any]:
+    if isinstance(key, list):
+        tok = key
+    else:
+        tok = key.split("__")
+
+    match tok:
+        case ["area"]:
+            return lambda o: round(o.Area(), precision)
+        case ["length"]:
+            return lambda o: round(o.Length(), precision)
+        case ["normal"]:
+            return lambda o: o.normalAt()
+        case ["dist"]:
+            return lambda o: o.Center().dot(param)
+        case _:
+            raise ValueError(f"Unknown kwarg \"{'__'.join(tok)}\"")
+
+
+"""
+how should this work?
+wp.sort(dist=
+"""
 
 
 class Workplane(CQFilterMixin, cq.Workplane):

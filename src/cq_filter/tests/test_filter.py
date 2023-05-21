@@ -1,5 +1,3 @@
-import pytest
-
 from cq_filter.cq_filter import Cluster, Workplane
 
 
@@ -10,18 +8,6 @@ def test_inheritance():
     assert isinstance(wp, Workplane)
     assert isinstance(wp2, Workplane)
     assert hasattr(wp2, "filter")
-
-
-@pytest.fixture
-def wp_with_rects():
-    wp = (
-        Workplane()
-        .pushPoints([(0, 10), (0, -10), (0, 20), (5, 15)])
-        .rect(2, 2)
-        .extrude(1)
-        .faces(">Z")
-    )
-    return wp
 
 
 def test_filter(wp_with_rects):
