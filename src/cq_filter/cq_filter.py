@@ -120,20 +120,20 @@ class CQFilterMixin:
 
         if not everything:
             # Mother of all assumptions:
-            # If all the edges on a new face are partners with other
+            # If all the edges on a new face are shared with other
             # new faces, then it's a face we want to focus on.
 
-            partner_faces = []
+            shared_faces = []
             for i, face in enumerate(new_faces):
                 face_topo_edges = [edge.wrapped for edge in face.Edges()]
                 other_faces = new_faces[:i] + new_faces[i + 1 :]
                 other_topo_edges = [
                     edge.wrapped for face in other_faces for edge in face.Edges()
                 ]
-                if _partner_topo_edges(face_topo_edges, other_topo_edges):
-                    partner_faces.append(face)
+                if _all_edges_shared(face_topo_edges, other_topo_edges):
+                    shared_faces.append(face)
 
-            new_faces = partner_faces
+            new_faces = shared_faces
 
         return self.newObject(new_faces)
 
@@ -153,20 +153,20 @@ def break_compound_to_faces(compound: cq.Compound) -> list[cq.Face]:
     return faces
 
 
-def _partner_topo_edges(
+def _all_edges_shared(
     face_topo_edges: list[TopoDS_Edge], other_topo_edges: list[TopoDS_Edge]
 ) -> bool:
     for face_topo_edge in face_topo_edges:
-        if not _partner_topo_edge(face_topo_edge, other_topo_edges):
+        if not _shared_edge(face_topo_edge, other_topo_edges):
             return False
     return True
 
 
-def _partner_topo_edge(
+def _shared_edge(
     face_topo_edge: TopoDS_Edge, other_topo_edges: list[TopoDS_Edge]
 ) -> bool:
     for other_topo_edge in other_topo_edges:
-        if face_topo_edge.IsPartner(other_topo_edge):
+        if face_topo_edge.IsSame(other_topo_edge):
             return True
     return False
 
